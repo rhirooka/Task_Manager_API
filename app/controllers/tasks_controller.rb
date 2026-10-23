@@ -3,7 +3,26 @@ class TasksController < ApplicationController
 #GET /tasks　　タスク一覧を返す
 def index
     tasks=Task.all
+    
+    if params.key?(:completed)
+    #completed というパラメータが存在する場合だけ、条件検索を行う
+        completed_param=params[:completed]
+        
+        unless ["true", "false"].include?(completed_param)
+            render json: {
+                error: "completed must be true or false"
+            }, status: :bad_request
+            return
+            #上記のrender json:{} によって，400 Bad Requestを返します
+        end
+
+        completed=completed_param=="true"
+        tasks=tasks.where(completed: completed)
+    end
+
+
     render json: tasks
+
 end
 
 
