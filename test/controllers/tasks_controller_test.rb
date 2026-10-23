@@ -1,193 +1,275 @@
 require "test_helper"
 
 class TasksControllerTest < ActionDispatch::IntegrationTest
-#Railsが提供するHTTPリクエストを含む結合テストの仕組み
-#Railsアプリケーションに対するリクエストをテストコードから実行できる
+  setup do
+    @user = User.create!(
+      name: "Taro",
+      email_address: "taro@example.test",
+      password: "TestPass1234!"
+    )
 
-  # test "the truth" do
-  #   assert true
-  # end
-  #タスク一覧を取得できることを確認
-  test "task一覧を取得できる" do
-    get "/tasks"
-    #GETリクエストを送る処理
+    @other_user = User.create!(
+      name: "Hanako",
+      email_address: "hanako@example.test",
+      password: "TestPass1234!"
+    )
+
+    @task = @user.tasks.create!(
+      title: "Rubyの勉強",
+      completed: false
+    )
+
+    @other_task = @other_user.tasks.create!(
+      title: "SQLの勉強",
+      completed: false
+    )
+
+    token = @user.generate_token_for(:api_access)
+
+    @headers = {
+      "Authorization" => "Bearer #{token}"
+    }
+  end
+
+  # GET /tasks
+
+  test "本人のタスクだけ取得できる" do
+    get "/tasks", headers: @headers
 
     assert_response :ok
-    #HTPレスポンスが成功ステータス（200〜299）であることを確認
+
+    ids = JSON.parse(response.body).map do |task|
+      task["id"]
+    end
+
+    assert_equal [ @task.id ], ids
   end
 
+  test "未完了タスクを検索できる" do
+    get "/tasks",
+        params: { completed: "false" },
+        headers: @headers
 
-  test "タスクを作成できる" do
-  assert_difference "Task.count", 1 do
-    #ブロックの実行前と実行後でTask.countが１増えることを確認
+    assert_response :ok
 
-  # もしPOSTが201を返しても、DBにデータが保存されていなければ、このテストは失敗します。
-  #レスポンスだけでなく、DBの状態も確認していることが重要
-   
+    ids = JSON.parse(response.body).map do |task|
+      task["id"]
+    end
+
+    assert_equal [ @task.id ], ids
+  end
+
+  test "完了タスクを検索できる" do
+    completed_task = @user.tasks.create!(
+      title: "Railsの勉強",
+      completed: true
+    )
+
+    get "/tasks",
+        params: { completed: "true" },
+        headers: @headers
+
+    assert_response :ok
+
+    ids = JSON.parse(response.body).map do |task|
+      task["id"]
+    end
+
+    assert_equal [ completed_task.id ], ids
+  end
+
+  test "不正な検索条件なら400を返す" do
+    get "/tasks",
+        params: { completed: "abc" },
+        headers: @headers
+
+    assert_response :bad_request
+  end
+
+  # GET /tasks/:id
+
+  test "本人のタスク詳細を取得できる" do
+    get "/tasks/#{@task.id}", headers: @headers
+
+    assert_response :ok
+
+    data = JSON.parse(response.body)
+    assert_equal @task.id, data["id"]
+  end
+
+  test "他人のタスク詳細は取得できない" do
+    get "/tasks/#{@other_task.id}",
+        headers: @headers
+
+    assert_response :not_found
+  end
+
+  # POST /tasks
+
+  test "本人のタスクを作成できる" do
+    assert_difference "Task.count", 1 do
+      post "/tasks",
+           params: {
+             task: { title: "認証の勉強" }
+           },
+           headers: @headers,
+           as: :json
+    end
+
+    assert_response :created
+
+    data = JSON.parse(response.body)
+
+    assert_equal @user.id, data["user_id"]
+  end
+
+  test "user_idを偽装しても所有者は変わらない" do
     post "/tasks",
-      params: {
-        task: {
-          title: "SQLの勉強",
-          completed: false
+         params: {
+           task: {
+             title: "認可の勉強",
+             user_id: @other_user.id
+           }
+         },
+         headers: @headers,
+         as: :json
+
+    assert_response :created
+
+    data = JSON.parse(response.body)
+
+    assert_equal @user.id, data["user_id"]
+  end
+
+  test "タイトルが空なら作成できない" do
+    assert_no_difference "Task.count" do
+      post "/tasks",
+           params: {
+             task: { title: "" }
+           },
+           headers: @headers,
+           as: :json
+    end
+
+    assert_response :unprocessable_content
+  end
+
+  # PATCH /tasks/:id
+
+  test "本人のタスクを更新できる" do
+    patch "/tasks/#{@task.id}",
+          params: {
+            task: { completed: true }
+          },
+          headers: @headers,
+          as: :json
+
+    assert_response :ok
+    assert_equal true, @task.reload.completed
+  end
+
+  test "他人のタスクは更新できない" do
+    patch "/tasks/#{@other_task.id}",
+          params: {
+            task: { completed: true }
+          },
+          headers: @headers,
+          as: :json
+
+    assert_response :not_found
+    assert_equal false, @other_task.reload.completed
+  end
+
+  test "タイトルを空に更新できない" do
+    patch "/tasks/#{@task.id}",
+          params: {
+            task: { title: "" }
+          },
+          headers: @headers,
+          as: :json
+
+    assert_response :unprocessable_content
+
+    assert_equal "Rubyの勉強", @task.reload.title
+  end
+
+  test "更新時に所有者を変更できない" do
+    patch "/tasks/#{@task.id}",
+          params: {
+            task: { user_id: @other_user.id }
+          },
+          headers: @headers,
+          as: :json
+
+    assert_response :ok
+    assert_equal @user.id, @task.reload.user_id
+  end
+
+  # DELETE /tasks/:id
+
+  test "本人のタスクを削除できる" do
+    assert_difference "Task.count", -1 do
+      delete "/tasks/#{@task.id}",
+             headers: @headers
+    end
+
+    assert_response :no_content
+  end
+
+  test "他人のタスクは削除できない" do
+    assert_no_difference "Task.count" do
+      delete "/tasks/#{@other_task.id}",
+             headers: @headers
+    end
+
+    assert_response :not_found
+  end
+
+  # 認証エラー
+
+  test "未認証なら一覧を取得できない" do
+    get "/tasks"
+
+    assert_response :unauthorized
+  end
+
+  test "未認証ならタスクを作成できない" do
+    assert_no_difference "Task.count" do
+      post "/tasks",
+           params: {
+             task: { title: "不正な登録" }
+           },
+           as: :json
+    end
+
+    assert_response :unauthorized
+  end
+
+  test "未認証ならタスクを更新できない" do
+    patch "/tasks/#{@task.id}",
+          params: {
+            task: { completed: true }
+          },
+          as: :json
+
+    assert_response :unauthorized
+    assert_equal false, @task.reload.completed
+  end
+
+  test "未認証ならタスクを削除できない" do
+    assert_no_difference "Task.count" do
+      delete "/tasks/#{@task.id}"
+    end
+
+    assert_response :unauthorized
+  end
+
+  test "不正なトークンは拒否される" do
+    get "/tasks",
+        headers: {
+          "Authorization" => "Bearer invalid-token"
         }
-      },
-      as: :json
+
+    assert_response :unauthorized
   end
-
-  assert_response :created
-end
-
-
-test "タイトルが空ならタスクを作成できない" do
-  assert_no_difference "Task.count" do
-    post "/tasks",
-      params: {
-        task: {
-          title: ""
-        }
-      },
-      as: :json
-  end
-
-  assert_response :unprocessable_content
-end
-
-
-test "タスクを更新できる" do
-  task = Task.create!(
-    title: "Rubyの勉強",
-    completed: false
-  )
-
-  patch "/tasks/#{task.id}",
-    params: {
-      task: {
-        completed: true
-      }
-    },
-    as: :json
-
-  assert_response :ok
-
-  assert task.reload.completed?
-end
-
-test "タスクを削除できる" do
-  task = Task.create!(
-    title: "削除用タスク"
-  )
-
-  assert_difference "Task.count", -1 do
-    delete "/tasks/#{task.id}"
-  end
-
-  assert_response :no_content
-end
-
-test "存在しないタスクは404になる" do
-  get "/tasks/999999"
-
-  assert_response :not_found
-end
-
-test "未完了のタスクだけを取得できる" do
-  incomplete = Task.create!(
-    title: "未完了タスク",
-    completed: false
-  )
-
-  completed = Task.create!(
-    title: "完了タスク",
-    completed: true
-  )
-
-  get "/tasks", params: { completed: "false" }
-
-  assert_response :ok
-
-  ids = JSON.parse(response.body).map { |task| task["id"] }
-
-  assert_includes ids, incomplete.id
-  assert_not_includes ids, completed.id
-end
-
-test "完了済みのタスクだけを取得できる" do
-  incomplete = Task.create!(
-    title: "未完了タスク",
-    completed: false
-  )
-
-  completed = Task.create!(
-    title: "完了タスク",
-    completed: true
-  )
-
-  get "/tasks", params: { completed: "true" }
-
-  assert_response :ok
-
-  ids = JSON.parse(response.body).map { |task| task["id"] }
-
-  assert_includes ids, completed.id
-  assert_not_includes ids, incomplete.id
-end
-
-test "不正なcompletedパラメータは400を返す" do
-  get "/tasks", params: { completed: "abc" }
-
-  assert_response :bad_request
-
-
-end
-
-
-test "存在しないタスクは更新できない" do
-  patch "/tasks/999999",
-    params: {
-      task: {
-        completed: true
-      }
-    },
-    as: :json
-
-  assert_response :not_found
-
-  response_json = JSON.parse(response.body)
-
-  assert_equal "Task not found", response_json["error"]
-  #期待する値と実際の値が一致することを確認するメソッド
-end
-
-test "存在しないタスクは削除できない" do
-  delete "/tasks/999999"
-
-  assert_response :not_found
-
-  response_json = JSON.parse(response.body)
-
-  assert_equal "Task not found", response_json["error"]
-end
-
-
-test "タイトルを空に更新できない" do
-  task = Task.create!(
-    title: "Rubyの勉強",
-    completed: false
-  )
-
-  patch "/tasks/#{task.id}",
-    params: {
-      task: {
-        title: ""
-      }
-    },
-    as: :json
-
-  assert_response :unprocessable_content
-
-  assert_equal "Rubyの勉強", task.reload.title #DBからタスクの最新のデータを読み直して、そのタイトルを取得する処理
-end
-
-
-
 end

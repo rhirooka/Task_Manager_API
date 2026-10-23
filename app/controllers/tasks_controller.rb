@@ -1,93 +1,77 @@
 class TasksController < ApplicationController
+  before_action :authenticate_user!
+  before_action :set_task, only: [ :show, :update, :destroy ]
 
-#GET /tasks　　タスク一覧を返す
-def index
-    tasks=Task.all
-    
+  def index
+    tasks = current_user.tasks
+
     if params.key?(:completed)
-    #completed というパラメータが存在する場合だけ、条件検索を行う
-        completed_param=params[:completed]
-        
-        unless ["true", "false"].include?(completed_param)
-            render json: {
-                error: "completed must be true or false"
-            }, status: :bad_request
-            return
-            #上記のrender json:{} によって，400 Bad Requestを返します
-        end
+      value = params[:completed]
 
-        completed=completed_param=="true"
-        tasks=tasks.where(completed: completed)
+      unless [ "true", "false" ].include?(value)
+        render json: {
+          error: "completed must be true or false"
+        }, status: :bad_request
+        return
+      end
+
+      tasks = tasks.where(completed: value == "true")
     end
 
+    render json: tasks.order(:id)
+  end
 
-    render json: tasks
+  def show
+    render json: @task
+  end
 
-end
-
-
-#GET /tasks/:id　　特定のタスクを返す
-def show
-    task=Task.find_by(id: params[:id])
-
-    if task
-        render json: task
-    else
-        render json: { error: "Task not found" }, status: :not_found
-    end
-end
-
-
-#POST /tasks　　新しいタスクを作成する
-def create
-    task=Task.new(task_params)
+  def create
+    task = current_user.tasks.new(task_params)
 
     if task.save
-        render json: task, status: :created
+      render json: task, status: :created
     else
-        render json: { errors: task.errors.full_messages }, status: :unprocessable_content
+      render json: {
+        errors: task.errors.full_messages
+      }, status: :unprocessable_content
     end
-end
+  end
 
-
-#PATCH /tasks/:id　　特定のタスクを更新
-def update
-    task=Task.find_by(id: params[:id])
-    
-    unless task
-        render json: { error: "Task not found"}, status: :not_found
-        return
-    end
-
-    if task.update(task_params)
-        render json: task
+  def update
+    if @task.update(task_params)
+      render json: @task, status: :ok
     else
-        render json: { errors: task.errors.full_messages },status: :unprocessable_content
+      render json: {
+        errors: @task.errors.full_messages
+      }, status: :unprocessable_content
     end
-end
+  end
 
-
-#DELETE /tasks/:id 　特定のタスクを削除
-def destroy
-    task = Task.find_by(id: params[:id])
-
-    unless task
-      render json: { error: "Task not found" }, status: :not_found
-      return
-    end
-
-    task.destroy!
+  def destroy
+    @task.destroy!
     head :no_content
   end
 
   private
 
-  def task_params
-    params.require(:task).permit(:title, :description, :completed)
+  def set_task
+    @task = current_user.tasks.find_by(id: params[:id])
+
+    unless @task
+      render json: {
+        error: "Task not found"
+      }, status: :not_found
+    end
   end
 
+  def task_params
+    params.require(:task).permit(
+      :title,
+      :description,
+      :completed
+    )
+  end
 end
-
 
 =begin
 ※ここに書いた文章やコードは，すべてコメントアウトされます

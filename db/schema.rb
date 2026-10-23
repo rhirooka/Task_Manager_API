@@ -10,12 +10,40 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_103534) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_23_110701) do
+  create_table "sql_practice_reservations", id: :integer, default: nil, force: :cascade do |t|
+    t.integer "user_id", null: false
+    t.text "event_name", null: false
+  end
+
+  create_table "sql_practice_tasks", id: :integer, default: nil, force: :cascade do |t|
+    t.text "TITLE", null: false
+    t.integer "completed", default: 0, null: false
+  end
+
+  create_table "sql_practice_users", id: :integer, default: nil, force: :cascade do |t|
+    t.text "name", null: false
+  end
+
   create_table "tasks", force: :cascade do |t|
     t.string "title"
     t.text "description"
     t.boolean "completed", default: false, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "user_id"
+    t.index ["user_id"], name: "index_tasks_on_user_id"
   end
+
+  create_table "users", force: :cascade do |t|
+    t.string "name"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "email_address"
+    t.string "password_digest"
+    t.index ["email_address"], name: "index_users_on_email_address", unique: true
+  end
+
+  add_foreign_key "sql_practice_reservations", "sql_practice_users", column: "user_id"
+  add_foreign_key "tasks", "users"
 end
