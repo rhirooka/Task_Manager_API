@@ -1,5 +1,7 @@
 module Users
   class TasksController < ApplicationController
+    before_action :authenticate_user!
+
     def index
       user = User.find_by(id: params[:user_id])
 
@@ -10,7 +12,14 @@ module Users
         return
       end
 
-      render json: user.tasks
+      unless user.id == current_user.id
+        render json: {
+          error: "Forbidden"
+        }, status: :forbidden
+        return
+      end
+
+      render json: current_user.tasks
     end
   end
 end
