@@ -16,4 +16,24 @@ Rails.application.routes.draw do
     :destroy
   ]
 
+
+  Rails.application.routes.draw do
+    resources :tasks, only: [
+      :index,
+      :show,
+      :create,
+      :update,
+      :destroy,
+      :new,
+      :edit
+    ]
+
+    resources :users, only: [] do
+      resources :tasks, only: [:index], module: :users
+    end
+    #ネストしたルーティング（Nested Resources）：User に属する Task という関係をURLにも表しています
+
+  end
+
+
 end
