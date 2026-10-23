@@ -42,7 +42,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
       task["id"]
     end
 
-    assert_equal [@task.id], ids
+    assert_equal [ @task.id ], ids
   end
 
   test "未完了タスクを検索できる" do
@@ -56,7 +56,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
       task["id"]
     end
 
-    assert_equal [@task.id], ids
+    assert_equal [ @task.id ], ids
   end
 
   test "完了タスクを検索できる" do
@@ -75,7 +75,7 @@ class TasksControllerTest < ActionDispatch::IntegrationTest
       task["id"]
     end
 
-    assert_equal [completed_task.id], ids
+    assert_equal [ completed_task.id ], ids
   end
 
   test "不正な検索条件なら400を返す" do

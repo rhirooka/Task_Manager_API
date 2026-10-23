@@ -2,7 +2,6 @@ require "test_helper"
 
 module Users
   class TasksControllerTest < ActionDispatch::IntegrationTest
-
     def create_user(name, email)
       User.create!(
         name: name,
@@ -26,14 +25,14 @@ module Users
 
       get "/users/#{taro.id}/tasks",
           headers: auth_headers(taro)
-          #テスト中のHTTPリクエストにTaroの認証トークンを付ける処理
+      # テスト中のHTTPリクエストにTaroの認証トークンを付ける処理
 
       assert_response :ok
 
       data = JSON.parse(response.body)
       ids = data.map { |item| item["id"] }
 
-      assert_equal [task.id], ids
+      assert_equal [ task.id ], ids
     end
 
     test "存在しないユーザーは404を返す" do
@@ -82,8 +81,7 @@ module Users
           headers: auth_headers(taro)
 
       assert_response :forbidden
-      #正しくログインしていても、他人のデータを取得できないことを自動的に検証
+      # 正しくログインしていても、他人のデータを取得できないことを自動的に検証
     end
-
   end
 end

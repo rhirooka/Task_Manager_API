@@ -1,6 +1,6 @@
 class TasksController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_task, only: [:show, :update, :destroy]
+  before_action :set_task, only: [ :show, :update, :destroy ]
 
   def index
     tasks = current_user.tasks
@@ -8,7 +8,7 @@ class TasksController < ApplicationController
     if params.key?(:completed)
       value = params[:completed]
 
-      unless ["true", "false"].include?(value)
+      unless [ "true", "false" ].include?(value)
         render json: {
           error: "completed must be true or false"
         }, status: :bad_request

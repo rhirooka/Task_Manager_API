@@ -13,7 +13,7 @@ Rails.application.routes.draw do
 
   # ② ユーザーごとのタスク取得API
   resources :users, only: [] do
-    resources :tasks, only: [:index], module: :users
+    resources :tasks, only: [ :index ], module: :users
   end
 
   # ③ ログインAPI

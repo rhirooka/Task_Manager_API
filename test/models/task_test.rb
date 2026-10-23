@@ -1,25 +1,25 @@
-#Taskモデルのテスト
+# Taskモデルのテスト
 
 require "test_helper"
-#Railsのテスト用設定を読み込む
+# Railsのテスト用設定を読み込む
 
 class TaskTest < ActiveSupport::TestCase
-  #Taskモデルのテスト用クラスの定義
+  # Taskモデルのテスト用クラスの定義
   # test "the truth" do
   #   assert true
   # end
 
   test "titleがあれば有効なタスクになる" do
-    #１つのテストケースを定義
+    # １つのテストケースを定義
 
     task=Task.new(title: "Rubyの勉強", completed: false)
-    #Taskオブジェクトを作成
+    # Taskオブジェクトを作成
 
     assert task.valid?
-    #taskが真であることを確認
+    # taskが真であることを確認
   end
 
-  #つまり，「タイトルが指定されたタスクは有効である」条件を検証
+  # つまり，「タイトルが指定されたタスクは有効である」条件を検証
 
 
 
@@ -28,11 +28,7 @@ class TaskTest < ActiveSupport::TestCase
     task=Task.new(title: "", completed: false)
 
     assert_not task.valid?
-    #Taskが偽であることを確認
+    # Taskが偽であることを確認
   end
-  #つまり，「タイトルが空のタスクは無効である」条件を検証
-
+  # つまり，「タイトルが空のタスクは無効である」条件を検証
 end
-
-
-
