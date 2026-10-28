@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Task Manager</title>
+
+    <style>
+      body {
+        margin: 0;
+        font-family: sans-serif;
+        background: #f5f7fb;
+        color: #1f2937;
+      }
+
+      header {
+        background: #2563eb;
+        padding: 20px 32px;
+      }
+
+      header a {
+        color: white;
+        font-size: 22px;
+        font-weight: bold;
+        text-decoration: none;
+      }
+
+      main {
+        max-width: 850px;
+        margin: 40px auto;
+        padding: 0 20px;
+      }
+
+      .card {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 14px;
+      }
+
+      .task-link {
+        color: #1d4ed8;
+        font-weight: bold;
+        text-decoration: none;
+      }
+
+      .status {
+        color: #64748b;
+        font-size: 14px;
+      }
+
+      .completed {
+        color: #15803d;
+      }
+
+      .button {
+        display: inline-block;
+        background: #2563eb;
+        color: white;
+        padding: 10px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <%= link_to "Task Manager", dashboard_path %>
+    </header>
+
+    <main>
+      <%= yield %>
+    </main>
+  </body>
+</html>

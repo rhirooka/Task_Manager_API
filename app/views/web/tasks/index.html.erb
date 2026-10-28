@@ -1,0 +1,36 @@
+<h1>マイタスク</h1>
+
+<p>
+  <%= @current_user.name %>さんのタスク一覧
+</p>
+
+<p>
+  全<%= @tasks.size %>件 /
+  完了<%= @completed_count %>件
+</p>
+
+<% if @tasks.empty? %>
+  <div class="card">
+    <p>まだタスクがありません。</p>
+  </div>
+<% else %>
+  <% @tasks.each do |task| %>
+    <div class="card">
+      <h2>
+        <%= link_to task.title,
+                    dashboard_task_path(task),
+                    class: "task-link" %>
+      </h2>
+
+      <% if task.completed? %>
+        <p class="status completed">✓ 完了</p>
+      <% else %>
+        <p class="status">○ 未完了</p>
+      <% end %>
+
+      <p>
+        <%= task.description.presence || "説明なし" %>
+      </p>
+    </div>
+  <% end %>
+<% end %>
