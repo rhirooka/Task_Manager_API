@@ -1,0 +1,34 @@
+<%= link_to "← 一覧に戻る",
+            dashboard_path,
+            class: "button" %>
+
+<h1><%= @task.title %></h1>
+
+<div class="card">
+  <h2>タスクの詳細</h2>
+
+  <p>
+    <strong>ID：</strong>
+    <%= @task.id %>
+  </p>
+
+  <p>
+    <strong>説明：</strong>
+    <%= @task.description.presence || "説明なし" %>
+  </p>
+
+  <p>
+    <strong>進捗：</strong>
+
+    <% if @task.completed? %>
+      完了
+    <% else %>
+      未完了
+    <% end %>
+  </p>
+
+  <p>
+    <strong>作成日時：</strong>
+    <%= @task.created_at.strftime("%Y/%m/%d %H:%M") %>
+  </p>
+</div>

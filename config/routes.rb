@@ -2,6 +2,9 @@ Rails.application.routes.draw do
   # ヘルスチェック
   get "up" => "rails/health#show", as: :rails_health_check
 
+  get "/dashboard", to: "web/tasks#index", as: :dashboard
+  get "/dashboard/tasks/:id", to: "web/tasks#show", as: :dashboard_task
+
   # ① タスクのCRUD API
   resources :tasks, only: [
     :index,
