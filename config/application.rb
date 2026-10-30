@@ -28,5 +28,16 @@ module TaskManagerApi
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+
+    config.session_store :cookie_store,
+    key: "_task_manager_api_session",
+    same_site: :lax,
+    httponly: true
+
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use config.session_store, config.session_options
+
+    config.middleware.use Rack::MethodOverride
   end
 end

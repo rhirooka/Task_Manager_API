@@ -1,35 +1,58 @@
+
 module Web
-  # 通常のHTMLテンプレートを描写する機能を利用するためのcontroller
-  class TasksController < ActionController::Base
-    layout "web"
+  class TasksController < BaseController
+    before_action :set_task, only: %i[show edit update destroy]
 
-    before_action :authenticate_web_user!
-
-    # 認証されたユーザのタスクを取得
     def index
-      @tasks = @current_user.tasks.order(created_at: :desc)
+      @tasks = current_web_user.tasks.order(created_at: :desc)
       @completed_count = @tasks.where(completed: true).count
-      # @マークがついたインスタンス変数はcontrollerからviewにデータを渡す際に利用できる
     end
 
-    # 本人のタスクだけを検索して，存在しなければ404を返す
     def show
-      @task = @current_user.tasks.find_by(id: params[:id])
+    end
 
-      head :not_found unless @task
+    def new
+      @task = current_web_user.tasks.new
+    end
+
+    def create
+      @task = current_web_user.tasks.new(task_params)
+
+      if @task.save
+        redirect_to dashboard_path, status: :see_other
+      else
+        render :new, status: :unprocessable_entity
+      end
+    end
+
+    def edit
+    end
+
+    def update
+      if @task.update(task_params)
+        redirect_to dashboard_task_path(@task), status: :see_other
+      else
+        render :edit, status: :unprocessable_entity
+      end
+    end
+
+    def destroy
+      @task.destroy!
+      redirect_to dashboard_path, status: :see_other
     end
 
     private
 
-    def authenticate_web_user!
-      authenticate_or_request_with_http_basic("Task Manager") do |email, password|
-        @current_user = User.authenticate_by(
-          email_address: email.to_s.strip.downcase,
-          password: password
-        )
+    def set_task
+      @task = current_web_user.tasks.find(params[:id])
+    end
 
-        @current_user.present?
-      end
+    def task_params
+      params.require(:task).permit(
+        :title,
+        :description,
+        :completed
+      )
     end
   end
 end

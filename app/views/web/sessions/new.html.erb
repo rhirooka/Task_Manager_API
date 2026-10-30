@@ -1,0 +1,27 @@
+
+<h1>ログイン</h1>
+
+<div class="card">
+  <% if @login_error %>
+    <p style="color: red;">
+      <%= @login_error %>
+    </p>
+  <% end %>
+
+  <%= form_with url: web_session_path,
+                method: :post,
+                local: true do |form| %>
+
+    <p>
+      <%= form.label :email_address, "メールアドレス" %>
+      <%= form.email_field :email_address, required: true %>
+    </p>
+
+    <p>
+      <%= form.label :password, "パスワード" %>
+      <%= form.password_field :password, required: true %>
+    </p>
+
+    <%= form.submit "ログイン" %>
+  <% end %>
+</div>

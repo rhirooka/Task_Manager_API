@@ -1,0 +1,36 @@
+<% if @task.errors.any? %>
+  <div class="card">
+    <h3 style="color: red;">入力内容を確認してください</h3>
+
+    <ul>
+      <% @task.errors.full_messages.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<div class="card">
+  <%= form_with model: @task,
+                url: @task.persisted? ? dashboard_task_path(@task) : dashboard_tasks_path,
+                method: @task.persisted? ? :patch : :post,
+                local: true do |form| %>
+
+    <p>
+      <%= form.label :title, "タスク名" %>
+      <%= form.text_field :title, required: true %>
+    </p>
+
+    <p>
+      <%= form.label :description, "説明" %>
+      <%= form.text_area :description, rows: 4 %>
+    </p>
+
+    <p>
+      <%= form.check_box :completed %>
+      <%= form.label :completed, "完了済み" %>
+    </p>
+
+    <%= form.submit @task.persisted? ? "更新する" : "登録する" %>
+  <% end %>
+</div>

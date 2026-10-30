@@ -63,11 +63,22 @@
         text-decoration: none;
       }
     </style>
+    <%= csrf_meta_tags %>
   </head>
 
   <body>
     <header>
-      <%= link_to "Task Manager", dashboard_path %>
+        <%= link_to "Task Manager", dashboard_path %>
+
+        <% if current_web_user %>
+            <span style="color: white;">
+            <%= current_web_user.name %>さん
+            </span>
+
+            <%= button_to "ログアウト",
+                        web_logout_path,
+                        method: :delete %>
+        <% end %>
     </header>
 
     <main>

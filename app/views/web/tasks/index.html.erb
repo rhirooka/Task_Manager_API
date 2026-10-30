@@ -1,5 +1,13 @@
 <h1>マイタスク</h1>
 
+# 一覧画面に登録ボタンを追加
+<p>
+  <%= link_to "＋ 新しいタスク",
+              new_dashboard_task_path,
+              class: "button" %>
+</p>
+
+
 <p>
   <%= @current_user.name %>さんのタスク一覧
 </p>
