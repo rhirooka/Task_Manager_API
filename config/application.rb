@@ -33,7 +33,8 @@ module TaskManagerApi
     config.session_store :cookie_store,
     key: "_task_manager_api_session",
     same_site: :lax,
-    httponly: true
+    httponly: true,
+    secure: Rails.env.production?
 
     config.middleware.use ActionDispatch::Cookies
     config.middleware.use config.session_store, config.session_options

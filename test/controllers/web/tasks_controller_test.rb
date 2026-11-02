@@ -166,5 +166,29 @@ module Web
       get dashboard_path
       assert_redirected_to web_login_path
     end
+
+    test "他人のタスクを削除できない" do
+        sign_in
+
+        assert_no_difference("Task.count") do
+            delete dashboard_task_path(@other_task)
+        end
+
+        assert_response :not_found
+        assert Task.exists?(@other_task.id)
+    end
+
+    test "更新リクエストでタスクの所有者を変更できない" do
+        sign_in
+
+        patch dashboard_task_path(@task), params: {
+            task: {
+                user_id: @other_user.id
+            }
+        }
+
+        assert_redirected_to dashboard_task_path(@task)
+        assert_equal @user.id, @task.reload.user_id
+    end
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_23_110701) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_02_170922) do
   create_table "sql_practice_reservations", id: :integer, default: nil, force: :cascade do |t|
     t.integer "user_id", null: false
     t.text "event_name", null: false
@@ -32,6 +32,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_110701) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id"
+    t.index ["user_id", "completed"], name: "index_tasks_on_user_id_and_completed"
+    t.index ["user_id", "created_at"], name: "index_tasks_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_tasks_on_user_id"
   end
 
