@@ -31,4 +31,16 @@ class TaskTest < ActiveSupport::TestCase
     # Taskが偽であることを確認
   end
   # つまり，「タイトルが空のタスクは無効である」条件を検証
+
+  test "タスク検索用の複合インデックスが存在する" do
+    indexes = ActiveRecord::Base.connection.indexes(:tasks)
+
+    assert indexes.any? { |index|
+      index.columns == %w[user_id created_at]
+    }
+
+    assert indexes.any? { |index|
+      index.columns == %w[user_id completed]
+    }
+  end
 end
